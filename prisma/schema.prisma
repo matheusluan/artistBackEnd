@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./database/dev.db"
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+  type String
+
+  categories User_Category[]
+
+  event_categories Event_Category[]
+
+  @@map("category")
+}
+
+model User_Category {
+  userId     String @map("user_id")
+  categoryId String @map("category_id")
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([userId, categoryId])
+  @@map("user_category")
+}
+
+model User {
+  id            String  @id @default(uuid())
+  name          String
+  username      String  @unique
+  password      String
+  status        Boolean @default(true)
+  user_type     String
+  document      String? @unique
+  email         String? @unique
+  profile_image String?
+  cel_phone     String?
+  rating        Int?
+
+  facebookUrl   String? 
+  instagramUrl  String? 
+  tiktokUrl     String? 
+  youtubeUrl    String? 
+
+
+  addressId String?  @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  categories User_Category[]
+
+  ratingsGiven    Rating[] @relation("RatedByUser")
+  ratingsReceived Rating[] @relation("RatedUser")
+
+  events Event[]
+
+  event_artist Event_Artist[]
+
+  post Post[]
+
+  @@map("user")
+}
+
+model Address {
+  id           String  @id @default(uuid())
+  street       String
+  neighborhood String
+  number       String
+  contry       String
+  city         String
+  lat          String?
+  long         String?
+  zip_code     String
+
+  user  User[]
+  event Event[]
+
+  @@map("address")
+}
+
+model Rating {
+  id        String @id @default(uuid())
+  value     Int
+
+  ratedByUserId   String? @map("rated_by_user_id")
+  ratedByUser     User?   @relation("RatedByUser", fields: [ratedByUserId], references: [id])
+
+  ratedUserId     String? @map("rated_user_id")
+  ratedUser       User?   @relation("RatedUser", fields: [ratedUserId], references: [id])
+
+  @@map("rating")
+}
+
+
+model Event_Category {
+  eventId    String @map("event_id")
+  categoryId String @map("category_id")
+
+  event    Event    @relation(fields: [eventId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([eventId, categoryId])
+  @@map("event_category")
+}
+
+model Event_Artist {
+  
+  id       String @id @default(uuid()) 
+  eventId  String @map("event_id")
+  artistId String @map("artist_id") 
+  accept   Boolean @default(false)
+  dh_action DateTime?  
+
+
+  event  Event @relation(fields: [eventId], references: [id])
+  artist User  @relation(fields: [artistId], references: [id])
+
+  @@map("event_artist")
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  name          String
+  description   String
+  budget        String?
+  people        String?
+  dh_event      DateTime
+  dh_expiration DateTime
+
+  userOwnerId String? @map("user_owner_id")
+  user        User?   @relation(fields: [userOwnerId], references: [id])
+
+  addressId String?  @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  category     Event_Category[]
+  event_artist Event_Artist[]
+  post         Post[]
+
+  @@map("event")
+}
+
+model Media {
+  id   String @id @default(uuid())
+  name String
+  path String
+
+  postId String? @map("post_id")
+  post   Post?   @relation(fields: [postId], references: [id])
+
+  @@map("media")
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  description String
+  dh_create   DateTime? @default(now())
+  dh_edit   DateTime? @updatedAt
+
+  userOwnerId String? @map("user_owner_id")
+  user        User?   @relation(fields: [userOwnerId], references: [id])
+
+  eventId String? @map("event")
+  event   Event?  @relation(fields: [eventId], references: [id])
+
+  medias Media[]
+
+  @@map("post")
+}
